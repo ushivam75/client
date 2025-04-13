@@ -1,8 +1,56 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/cartstyle.css";
+import { useDispatch, useSelector } from "react-redux";
+import cartSlice, {
+  addToCart,
+  emptyCartItem,
+  removeSingleItems,
+  removeToCart,
+} from "../redux/features/cartSlice";
+import toast from "react-hot-toast";
 
 const CartDetails = () => {
-  let arr = [0, 1];
+  const { carts } = useSelector((state) => state.allCart);
+  const [total, setTotal] = useState(0);
+  const [quantity, setQuantity] = useState(0);
+
+  //Total Price
+  useEffect(() => {
+    const totalPrice = carts.reduce(
+      (acc, item) => acc + item.price * item.qnty,
+      0
+    );
+    setTotal(totalPrice);
+  }, [carts]);
+
+  //Total Quantity
+  useEffect(() => {
+    const tQnty = carts.reduce((acc, item) => acc + item.qnty, 0);
+    setQuantity(tQnty);
+  }, [carts]);
+
+  const dispatch = useDispatch();
+  //add to cart
+  const handleIncrement = (e) => {
+    dispatch(addToCart(e));
+  };
+
+  //Remove from Cart
+  const handleDecrement = (e) => {
+    dispatch(removeToCart(e));
+    toast.success("Item removed from your cart");
+  };
+
+  //remove Single item
+  const handleSingleDecrement = (e) => {
+    dispatch(removeSingleItems(e));
+  };
+
+  //Empty Cart
+  const emptyCart = () => {
+    dispatch(emptyCartItem());
+    toast.success("Your Cart is empty");
+  };
   return (
     <>
       <div className="row justify-content-center m-0">
@@ -10,9 +58,14 @@ const CartDetails = () => {
           <div className="card">
             <div className="card-header bg-dark p-3">
               <div className="card-header-flex">
-                <h5 className="text-white m-0">Cart Calculation(1)</h5>
-                {arr.length > 0 ? (
-                  <button className="btn btn-danger mt-0 btn-sm">
+                <h5 className="text-white m-0">
+                  Cart Calculation({carts.length})
+                </h5>
+                {carts.length > 0 ? (
+                  <button
+                    className="btn btn-danger mt-0 btn-sm"
+                    onClick={() => emptyCart()}
+                  >
                     <i className="fa fa-trash-alt me-2"></i>
                     <span>Empty Cart</span>
                   </button>
@@ -22,7 +75,7 @@ const CartDetails = () => {
               </div>
             </div>
             <div className="card-body p-0">
-              {arr.length === 0 ? (
+              {carts.length === 0 ? (
                 <table className="table cart-table mb-0">
                   <tbody>
                     <tr>
@@ -53,45 +106,58 @@ const CartDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {arr.map((data, index) => {
+                    {carts.map((data, index) => {
                       return (
                         <>
                           <tr>
                             <td>
-                              <button className="prdct-delete">
+                              <button
+                                className="prdct-delete"
+                                onClick={() => handleDecrement(data.id)}
+                              >
                                 <i className="fa fa-trash-alt mr-2"></i>
                               </button>
                             </td>
                             <td>
                               <div className="product-img">
-                                <img src="/logo192.png" alt="" />
+                                <img src={data.imgdata} alt="" />
                               </div>
                             </td>
                             <td>
                               <div className="product-name">
-                                <p>punjabi</p>
+                                <p>{data.dish}</p>
                               </div>
                             </td>
-                            <td>300</td>
+                            <td>{data.price}</td>
                             <td>
                               <div className="prdct-qty-container">
-                                <button className="prdct-qty-btn" type="button">
+                                <button
+                                  className="prdct-qty-btn"
+                                  type="button"
+                                  onClick={() => handleSingleDecrement(data)}
+                                >
                                   <i className="fa fa-minus"></i>
                                 </button>
                                 <input
                                   text="text"
                                   className="qty-input-box"
-                                  value={1}
+                                  value={data.qnty}
                                   disabled
                                   name=""
                                   id=""
                                 />
-                                <button className="prdct-qty-btn" type="button">
+                                <button
+                                  className="prdct-qty-btn"
+                                  type="button"
+                                  onClick={() => handleIncrement(data)}
+                                >
                                   <i className="fa fa-plus"></i>
                                 </button>
                               </div>
                             </td>
-                            <td className="text-right">400</td>
+                            <td className="text-right">
+                              {data.qnty * data.price}
+                            </td>
                           </tr>
                         </>
                       );
@@ -103,11 +169,11 @@ const CartDetails = () => {
                       <th colSpan={3}>&nbsp;</th>
                       <th>
                         Item in cart<span className="ml-2 mr-2">:</span>
-                        <span className="text-danger">4</span>
+                        <span className="text-danger">{quantity}</span>
                       </th>
                       <th className="text-right">
                         Total price<span className="ml-2 mr-2">:</span>
-                        <span className="text-danger">4</span>
+                        <span className="text-danger">{total}</span>
                       </th>
                     </tr>
                   </tfoot>
